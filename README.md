@@ -1,0 +1,180 @@
+<div align="center">
+
+```
+██╗████████╗██╗  ██╗██╗  ██╗
+██║╚══██╔══╝██║ ██╔╝██║ ██╔╝
+██║   ██║   █████╔╝ █████╔╝
+██║   ██║   ██╔═██╗ ██╔═██╗
+██║   ██║   ██║  ██╗██║  ██╗
+╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝
+```
+
+# itkk-bulk-apikey
+
+**Bulk-create ITKK (itkk.lol) accounts with auto-generated API keys — OpenAI-compatible inference + 9Router connector.**
+
+[![Node](https://img.shields.io/badge/Node-%E2%89%A518-3DA639?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Dependencies](https://img.shields.io/badge/dependencies-0-blue?style=for-the-badge)](#)
+[![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
+[![Models](https://img.shields.io/badge/models-5%20served-412991?style=for-the-badge)](https://itkk.lol)
+[![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
+
+[🛠 Quick start](#-quick-start) · [🎁 Free tier](#-free-tier--how-much-you-get) · [🤖 Models](#-models--all-5-of-them) · [🧪 Use the API](#-how-to-use-the-api) · [✅ Verified](#-verified-working--every-key-is-tested) · [🧭 How it works](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
+
+</div>
+
+<div align="center">
+
+**English** · [Türkçe](README.tr.md) · [中文](README.cn.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md)
+
+</div>
+
+---
+
+## ✨ Why this exists
+
+itkk.lol is a New API `v1.0.0-rc.40` panel (system name **ITKK**) with **e-mail-code sign-up**, Turnstile **off**, password registration open and a **100000-quota sign-up credit** (quota_per_unit 500000 → ¥0.20 at display rate). One account = one key; this tool writes a key to `keys.txt` only after the panel's own relay answered 200 with content.
+
+## 🎁 Free tier — how much you get
+
+**Every new account gets sign-up quota** — no card, no captcha.
+
+| What | Value |
+| --- | --- |
+| Sign-up quota | **100000** (`quota_per_unit` 500000, display ¥0.20) |
+| Card required | **No** |
+| Daily check-in | not enabled on this panel (`checkin_enabled:false`) |
+| Sign-up | e-mail code (dotless gmail passes) |
+| The unit that scales | **one account = one key** → `--count N` is "N free accounts" |
+
+> 💡 The free tier is set by ITKK (itkk.lol) — 国模 API 中转 and can change. Check the live numbers at [itkk.lol](https://itkk.lol) — and let the tool's own gate decide:
+
+```bash
+node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
+```
+
+## 🤖 Models — all 5 of them
+
+The catalogue is **group-bound**: a fresh account lands in `default`, which has channels for *nothing* — a token created without a group answers `503 No available channel for model X under group default (distributor)`. `/api/pricing` publishes `group_ratio` + per-model `enable_groups`, and the mint binds the token to one of those groups before testing. Live ids measured 2026-10-19: `deepseek-v4.1-flash` (group `China-Ai-flash`, 0.1×), `glm-5.3-flash` (`China-Ai-flash`), `glm-5.3` (`China-Ai-福利`, 0.05×), `deepseek-v4-pro` (`China-Ai-福利`), `kimi-k3` (`China-Ai-福利`).
+
+## 🧪 How to use the API
+
+The base URL is **`https://itkk.lol/v1`** — OpenAI-compatible.
+
+```bash
+curl https://itkk.lol/v1/chat/completions \
+  -H "Authorization: Bearer <your key>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4.1-flash","messages":[{"role":"user","content":"hi"}],"max_tokens":8}'
+```
+
+The model id must belong to the group the token is bound to.
+
+## 🛠 Quick start
+
+```bash
+node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+```
+
+Every HTTP call leaves through an exit from `proxy-lab/out/*live*.txt` (or WARP `socks5://127.0.0.1:40000`); a direct request is refused by construction.
+
+### 🖱️ The launcher
+
+
+
+## ✅ Verified working — every key is tested
+
+| Check | Result |
+| --- | --- |
+| `GET /api/status` | **200** — `register_enabled=true`, `email_verification=true`, `turnstile_check=false` |
+| `GET /api/verification?email=<gmail>` | **200** — mail arrives as `ITKK <mail@itkk.lol>`, subject `ITKK邮箱验证邮件`, 6-hex code |
+| `POST /api/user/register` | **200** — account lands in group `default` with quota 100000 |
+| `POST /api/user/login` | **200** — `access_token` JWT (+ `session` cookie) |
+| `GET /api/user/self` | **200** — `quota`, `group` |
+| `POST /api/token/` with `group:""` | **200**, but the key never routes: `503 No available channel … under group default` |
+| `POST /api/token/` with a catalogue group | **200** — the bound group is what makes the channel reachable |
+| `POST /api/token/<id>/key` | **200** — plaintext key |
+| `POST /v1/chat/completions` before a key is written | **200** with real content required |
+
+## 🧭 How it works
+
+```
+inbox (one address per account)                                  a fresh address per account
+   │
+   ├─▶ sign-up: ITKK (itkk.lol) — 国模 API 中转 page → e-mail address → code / link from the inbox
+   ├─▶ session: the account's cookies or access token in hand
+   ├─▶ key mint: the account's key endpoint → plaintext key returned once (written to disk immediately)
+   └─▶ live proof: POST https://itkk.lol/v1/chat/completions → real content = the key is live
+```
+
+| Step | Call | Notes |
+| --- | --- | --- |
+| code | `GET /api/verification?email=` | dotless gmail works; recycled Emailnator boxes may hold an account (`邮箱地址已被占用`) |
+| signup | `POST /api/user/register` | password registration open, Turnstile off |
+| sign-in | `POST /api/user/login` | JWT in this fork's answer |
+| catalogue | `GET /api/pricing` | `group_ratio`, `usable_group`, per-model `enable_groups` |
+| token | `POST /api/token/` `{group, model_limits}` | without a group the key answers 503 |
+| key | `POST /api/token/<id>/key` | plaintext |
+| check | `POST /v1/chat/completions` | live 200 required before `keys.txt` |
+
+## ⚙️ CLI options
+
+```bash
+node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+```
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--count` | 5 | accounts to attempt |
+| `--conc` | 4 | parallel accounts |
+| `--model` | `deepseek-v4.1-flash` | model the gate prefers |
+| `--pool <file>` | built-in list | extra exit file |
+
+## 🛰️ Behind a proxy
+
+Exits come from `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local WARP; each account holds one exit for all of its panel calls and the mail rail rotates through the pool (WARP first). No direct request is possible: `req()` throws when there is no exit.
+
+## 📄 Files
+
+| Path | Contents |
+| --- | --- |
+| `keys.txt` | one chat-200 key per line |
+| `keys-unfunded.txt` | keys whose account could not reach a live group |
+| `accounts.json` | username / password / email / quota / group / attempts per account |
+| `out/mint-<date>.log` | raw run log |
+
+## 🔌 Connect to 9Router
+
+[9Router](https://9router.com) is a self-hosted, OpenAI-compatible router. One command turns `keys.txt` into a provider-node with working combos:
+
+```bash
+node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
+  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+```
+
+Models are then served as `itkk/<model id>`, load-balanced across every key.
+
+## 🔑 What one key gets you
+
+| | |
+| --- | --- |
+| 🏢 Provider | **ITKK (itkk.lol) — 国模 API 中转** — [itkk.lol](https://itkk.lol) |
+| 🎁 What the provider gives | one account per key — e-mail code sign-up, token bound to a live group, every key chat-200 |
+| 🔑 What one key gets you | one API key scoped to its own account: the 5 model ids on the endpoint below, at your plan's limits. The quota lives on the **account**, which is exactly why this tool creates one account per key |
+| 🌐 API shape | OpenAI-compatible: `POST https://itkk.lol/v1/chat/completions` |
+| 🔒 Your data | only itkk.lol and the inbox backend you configure are contacted; keys stay on your machine |
+
+## 🐞 Issues
+
+If the panel changes its signup shape, groups or credit, the tool stops at that step and records the panel's verbatim answer in `accounts.json`.
+
+## 📄 License
+
+MIT © 2026 — see [LICENSE](LICENSE).
+
+<div align="center">
+
+**[MIT](LICENSE)** © 2026 itkk-bulk-apikey contributors
+
+</div>
