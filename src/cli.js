@@ -20,4 +20,4 @@ process.argv = [
   '--tag', 'itkk',
   ...argv,
 ];
-require('../_community/mint-cnbulk.js');
+require('./vendor/mint-cnbulk.js');
