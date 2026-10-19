@@ -30,8 +30,6 @@
 
 </div>
 
-
-
 ---
 
 ## ✨ 이 도구가 필요한 이유
@@ -82,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 모든 HTTP 호출은 `proxy-lab/out/*live*.txt`의 출구(또는 WARP `socks5://127.0.0.1:40000`)를 통해 나갑니다. 직접 요청은 구조적으로 거부됩니다.
 
 ### 🖱️ 런처
-
-
 
 ## ✅ 작동 검증 완료 — 모든 키가 테스트됩니다
 

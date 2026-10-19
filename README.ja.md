@@ -30,8 +30,6 @@
 
 </div>
 
-
-
 ---
 
 ## ✨ なぜこれがあるのか
@@ -82,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 すべての HTTP 呼び出しは `proxy-lab/out/*live*.txt` の出口（または WARP `socks5://127.0.0.1:40000`）を経由して出ていきます。直接リクエストは仕組み上拒否されます。
 
 ### 🖱️ ランチャー
-
-
 
 ## ✅ 動作検証済み — すべてのキーがテストされます
 

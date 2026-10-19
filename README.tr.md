@@ -30,9 +30,6 @@
 
 </div>
 
-
-
-
 ---
 
 ## ✨ Bu neden var
@@ -83,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 Her HTTP çağrısı `proxy-lab/out/*live*.txt` içinden bir çıkıştan (veya WARP `socks5://127.0.0.1:40000` üzerinden) geçer; doğrudan istek tasarım gereği reddedilir.
 
 ### 🖱️ Başlatıcı
-
-
 
 ## ✅ Doğrulanmış çalışıyor — her anahtar test edilir
 

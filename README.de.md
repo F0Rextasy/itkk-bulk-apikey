@@ -30,8 +30,6 @@
 
 </div>
 
-
-
 ---
 
 ## ✨ Warum es dieses Projekt gibt
@@ -82,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 Jeder HTTP-Aufruf geht über einen Exit aus `proxy-lab/out/*live*.txt` (oder WARP `socks5://127.0.0.1:40000`); eine direkte Anfrage wird konstruktionsbedingt abgelehnt.
 
 ### 🖱️ Der Launcher
-
-
 
 ## ✅ Verifiziert funktionsfähig — jeder Schlüssel wird getestet
 

@@ -30,8 +30,6 @@
 
 </div>
 
-
-
 ---
 
 ## ✨ Por que isto existe
@@ -82,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 Toda chamada HTTP sai por uma saída de `proxy-lab/out/*live*.txt` (ou WARP `socks5://127.0.0.1:40000`); uma requisição direta é recusada por construção.
 
 ### 🖱️ O lançador
-
-
 
 ## ✅ Verificado funcionando — toda chave é testada
 

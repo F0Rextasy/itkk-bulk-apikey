@@ -30,9 +30,6 @@
 
 </div>
 
-
-
-
 ---
 
 ## ✨ 为什么有这个项目
@@ -83,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 每个 HTTP 请求都通过来自 `proxy-lab/out/*live*.txt` 的出口（或 WARP `socks5://127.0.0.1:40000`）发出；从设计上就拒绝直连请求。
 
 ### 🖱️ 启动器
-
-
 
 ## ✅ 已验证可用 — 每个密钥都经过测试
 

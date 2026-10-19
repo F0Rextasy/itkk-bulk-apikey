@@ -30,8 +30,6 @@
 
 </div>
 
-
-
 ---
 
 ## ✨ Pourquoi ce projet existe
@@ -82,8 +80,6 @@ node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 Chaque appel HTTP sort par une sortie de `proxy-lab/out/*live*.txt` (ou WARP `socks5://127.0.0.1:40000`) ; une requête directe est refusée par construction.
 
 ### 🖱️ Le lanceur
-
-
 
 ## ✅ Vérifié et fonctionnel — chaque clé est testée
 
