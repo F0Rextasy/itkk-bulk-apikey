@@ -4,7 +4,7 @@
 /**
  * Connect ITKK (itkk.lol) — 国模 API 中转 to a 9Router instance.
  *
- * ITKK (itkk.lol) — 国模 API 中转 serves an OpenAI-compatible endpoint (https://inference.itkk.global/v1), so a single
+ * ITKK (itkk.lol) — 国模 API 中转 serves an OpenAI-compatible endpoint (https://itkk.lol/v1), so a single
  * provider-node carries every key: this registers one `openai-compatible` node
  * with prefix `itkk` and then one connection per API key, named
  * `itkk-001`, `itkk-002`, … Re-running it is idempotent (an existing node
@@ -13,7 +13,7 @@
  * Usage:
  *   node src/connect-9router.js \
  *     --base http://localhost:20128 --password 123456 \
- *     --api-key dahl_xxxx [--name "ITKK (itkk.lol) — 国模 API 中转"] [--prefix itkk]
+ *     --api-key <key> [--name "ITKK (itkk.lol) — 国模 API 中转"] [--prefix itkk]
  *
  *   node src/connect-9router.js                  # register every key in keys.txt
  *   node src/connect-9router.js --model <id>     # pin the connection's default model
@@ -24,7 +24,7 @@
  *   --api-key <key>    ITKK (itkk.lol) — 国模 API 中转 API key     (default: every key in keys.txt)
  *   --name <name>      provider-node name       (default ITKK (itkk.lol) — 国模 API 中转)
  *   --prefix <slug>    provider prefix in 9Router (default itkk)
- *   --base-url <url>   provider base URL        (default https://inference.itkk.global/v1)
+ *   --base-url <url>   provider base URL        (default https://itkk.lol/v1)
  *   --model <id>       connection default model (default MiniMaxAI/MiniMax-M2.7)
  *
  * Zero dependencies. Node.js >= 18.
