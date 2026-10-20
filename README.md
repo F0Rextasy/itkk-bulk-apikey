@@ -74,10 +74,14 @@ The model id must belong to the group the token is bound to.
 ## 🛠 Quick start
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+# 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
+printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
+
+# 2) go
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash --pool proxies.txt
 ```
 
-Every HTTP call leaves through an exit from `proxy-lab/out/*live*.txt` (or WARP `socks5://127.0.0.1:40000`); a direct request is refused by construction.
+Requests go through your proxy list when one is provided (`--pool` / `ITKK_PROXIES`); without a pool the tool connects directly. A key reaches `keys.txt` in either mode — still only after a live chat 200.
 
 ### 🖱️ The launcher
 
@@ -127,11 +131,16 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 | `--count` | 5 | accounts to attempt |
 | `--conc` | 4 | parallel accounts |
 | `--model` | `deepseek-v4.1-flash` | model the gate prefers |
-| `--pool <file>` | built-in list | extra exit file |
+| `--pool <file>` | built-in list | optional exit file (`ITKK_PROXIES` env works too) |
 
 ## 🛰️ Behind a proxy
 
-Exits come from `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local WARP; each account holds one exit for all of its panel calls and the mail rail rotates through the pool (WARP first). No direct request is possible: `req()` throws when there is no exit.
+**Optional — recommended at scale (per-IP limits, bans).** The tool works without a proxy too.
+
+- **With a pool:** pass `--pool <file>` (or set `ITKK_PROXIES`) and every request goes through an exit from that list — one account holds one exit for all of its panel calls, and the mail rail rotates through the pool.
+- **Without a pool:** the CLI prints `running WITHOUT a proxy (direct)` and connects directly — sign-up, code reading, the token/group walk and the chat gate all run the same way.
+
+The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local WARP; there each account holds one exit for all of its panel calls and the mail rail rotates through the pool (WARP first).
 
 ## 📄 Files
 

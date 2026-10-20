@@ -5,6 +5,7 @@
  *
  *   node providers/_community/mint-cnbulk.js --name itkk.lol --base https://itkk.lol \
  *        --tag itkk --count 100 --conc 6 [--model deepseek-v4.1-flash] [--checkin]
+ *   node src/cli.js --help       # the published entry: name/base/tag are pinned
  *
  * Why this engine exists next to mint-newapi.js / mint-newapi-pinned.js:
  *   1. it runs accounts **concurrently** (per-account exit, one exit held for the
@@ -17,8 +18,8 @@
  *   3. a key reaches `keys.txt` only after the panel's own relay answers
  *      `POST /v1/chat/completions` with 200 + non-empty content (chat-200 gate).
  *
- * Every HTTP call goes through an exit from the pooled supply; a direct call is
- * a hard failure (operator directive: no run touches the open internet raw).
+ * Requests go through your proxy list when one is provided (--pool <file> or
+ * ITKK_PROXIES). Without a pool the tool connects directly.
  */
 
 const fs = require('fs');
@@ -66,8 +67,26 @@ const POLL_MS = parseInt(one('poll-ms', '4000'), 10);
 const REPORT = path.join(ROOT, 'proxy-lab', 'out', one('report', 'cn4-mint-a-20261019.md'));
 const BUDGET_MS = parseInt(one('budget', '2400'), 10) * 1000;
 
+if (has('help') || has('h')) {
+  console.log(`itkk-bulk-apikey — mint ITKK (itkk.lol) accounts, one key each, verified by a live chat call.
+
+  node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
+  node src/cli.js --help
+
+  --count N        accounts to attempt                              [5]
+  --conc N         parallel accounts (max 12)                       [4]
+  --model <id>     model the gate prefers          [deepseek-v4.1-flash]
+  --pool <file>    exit list, one per line, optional (env ITKK_PROXIES)
+  --checkin        call the panel's daily check-in per account
+  --budget SEC     hard stop for the whole run                   [2400]
+  --mail <mode>    mailbox backend: emailnator | temptf     [emailnator]
+
+Requests go through your proxy list when one is provided (--pool <file> or
+ITKK_PROXIES). Without a pool the tool connects directly.`);
+  process.exit(0);
+}
 if (!NAME || !BASE) {
-  console.error('usage: --name <provider-dir> --base <https://host> [--count N] [--conc N] [--model id]');
+  console.error('usage: --name <provider-dir> --base <https://host> [--count N] [--conc N] [--model id]  (--help)');
   process.exit(2);
 }
 
@@ -80,7 +99,7 @@ const LOG = path.join(DIR, 'out', `mint-${new Date().toISOString().slice(0, 10)}
 const nowIso = () => new Date().toISOString();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const randHex = (n) => crypto.randomBytes(Math.ceil(n / 2)).toString('hex').slice(0, n);
-const maskExit = (l) => String(l || '').replace(/\/\/[^@/]+@/, '//***@');
+const maskExit = (l) => (l ? String(l).replace(/\/\/[^@/]+@/, '//***@') : 'direct');
 
 let logStream = null;
 function log(msg) {
@@ -107,6 +126,9 @@ const POOL_FILES = [
   path.join(ROOT, 'proxy-lab', 'out', 'chrome-safe-exits.txt'),
   path.join(ROOT, 'proxy-lab', 'out', 'captcha-exits-live.txt'),
   ...many('pool').map((p) => (path.isAbsolute(p) ? p : path.join(ROOT, p))),
+  // The launcher hands the list it asked for over as `ITKK_PROXIES` (an absent
+  // file is not an error: the run then goes direct).
+  ...(process.env.ITKK_PROXIES ? [path.resolve(ROOT, process.env.ITKK_PROXIES)] : []),
 ];
 
 const URL_RE = /(?:https?|socks5h?):\/\/(?:[^@\s/#]+@)?[A-Za-z0-9.\-]+:\d{2,5}/g;
@@ -162,23 +184,28 @@ function nextExit(exits) {
     const p = exits[cursor++ % exits.length];
     if (p) return p;
   }
-  return null;
+  return null; // the `null` direct sentinel, or a list with no usable exit
 }
 
-// `label` is the proxy identity, `agent` the tunnel: one agent per attempt keeps
-// a single upstream address for the whole request (fail-closed without proxy).
+/** No usable exit in the list = DIRECT mode: the single `null` sentinel. */
+const isDirect = (exits) => !exits.some(Boolean);
+
+// `proxy` is the exit a call runs on — or `null` for DIRECT mode (no pool
+// loaded), when the request leaves on this machine's own line. With an exit,
+// one agent per attempt keeps a single upstream address for the whole request.
 function req(proxy, url, { method = 'GET', headers = {}, body = null, timeoutMs = 40000, retries = 1 } = {}) {
   const run = () =>
     new Promise((resolve, reject) => {
-      if (!proxy) return reject(new Error('refusing direct request (no exit): ' + url));
       const lib = url.startsWith('https:') ? require('https') : require('http');
       const u = new URL(url);
       const payload = body == null ? null : Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
       const h = { 'accept-language': 'en-US,en;q=0.9', ...headers };
       if (payload && !Object.keys(h).some((k) => k.toLowerCase() === 'content-type')) h['Content-Type'] = 'application/json';
       if (payload) h['Content-Length'] = payload.length;
-      const agent = createAgent({ ...proxy, connectTimeoutMs: proxy.connectTimeoutMs || 9000, timeoutMs });
-      const r = lib.request({ method, host: u.hostname, port: u.port || (u.protocol === 'https:' ? 443 : 80), path: u.pathname + u.search, agent, headers: h }, (res) => {
+      // DIRECT mode (`proxy === null`): no tunnel agent on the options at all.
+      const opts = { method, host: u.hostname, port: u.port || (u.protocol === 'https:' ? 443 : 80), path: u.pathname + u.search, headers: h };
+      if (proxy) opts.agent = createAgent({ ...proxy, connectTimeoutMs: proxy.connectTimeoutMs || 9000, timeoutMs });
+      const r = lib.request(opts, (res) => {
         let text = '';
         res.setEncoding('utf8');
         res.on('data', (c) => (text += c));
@@ -358,8 +385,9 @@ const MAIL_EXITS = [];
 async function mailTry(fn, { tries = 6 } = {}) {
   let last = null;
   for (let i = 0; i < tries; i++) {
+    // A pick may be `null`: that is the direct sentinel (no pool loaded), and
+    // the mail call then leaves on this machine's own line too (see `req`).
     const p = MAIL_EXITS.length && i < 2 ? MAIL_EXITS[i % MAIL_EXITS.length] : nextExit(EXITS_GLOBAL);
-    if (!p) break;
     try {
       const out = await fn(p);
       if (!MAIL_EXITS.includes(p)) {
@@ -490,32 +518,37 @@ async function mintAccount(exits, idx) {
   // The exit is proven against /api/status before any account state exists.
   // Serial screening burned a 15 s timeout per dead free line (the first launch
   // died on exactly that), so candidates are raced in parallel and local WARP —
-  // measured to reach this panel — is the guaranteed last candidate.
-  const cands = [];
-  for (let i = 0; i < 8; i++) {
-    const c = nextExit(exits);
-    if (c && !cands.includes(c)) cands.push(c);
+  // measured to reach this panel — is the guaranteed last candidate. DIRECT
+  // mode (no pool loaded, the single `null` sentinel) skips the screening and
+  // runs the account on this machine's own line.
+  let exit = null;
+  if (!isDirect(exits)) {
+    const cands = [];
+    for (let i = 0; i < 8; i++) {
+      const c = nextExit(exits);
+      if (c && !cands.includes(c)) cands.push(c);
+    }
+    const warp = exits.find((e) => e.warp);
+    if (warp && !cands.includes(warp)) cands.push(warp);
+    const screened = await Promise.all(
+      cands.map(async (c) => {
+        try {
+          const st = await req(c, BASE + '/api/status', {
+            headers: { accept: 'application/json', 'user-agent': ua, origin: BASE, referer: BASE + '/' },
+            timeoutMs: 10000,
+          });
+          if (st.status === 200 && st.json && st.json.data) return c;
+        } catch (e) {}
+        return null;
+      })
+    );
+    exit = screened.find((c) => c && !c.warp) || screened.find(Boolean) || null;
+    if (!exit) throw new Error('no exit reached the panel');
   }
-  const warp = exits.find((e) => e.warp);
-  if (warp && !cands.includes(warp)) cands.push(warp);
-  const screened = await Promise.all(
-    cands.map(async (c) => {
-      try {
-        const st = await req(c, BASE + '/api/status', {
-          headers: { accept: 'application/json', 'user-agent': ua, origin: BASE, referer: BASE + '/' },
-          timeoutMs: 10000,
-        });
-        if (st.status === 200 && st.json && st.json.data) return c;
-      } catch (e) {}
-      return null;
-    })
-  );
-  const exit = screened.find((c) => c && !c.warp) || screened.find(Boolean) || null;
-  if (!exit) throw new Error('no exit reached the panel');
 
-  const rec = { host: HOST, provider: NAME, tag, username: tag, password, ua, at: nowIso(), exit: maskExit(exit.line), status: 'start' };
+  const rec = { host: HOST, provider: NAME, tag, username: tag, password, ua, at: nowIso(), exit: maskExit(exit && exit.line), status: 'start' };
   state.tried++;
-  log(`#${idx} start ${tag} exit=${maskExit(exit.line)}`);
+  log(`#${idx} start ${tag} exit=${maskExit(exit && exit.line)}`);
 
   const startSec = Math.floor(Date.now() / 1000);
   const { box, baseline } = await newMailbox(exit);
@@ -706,17 +739,25 @@ async function groupPlan(exit, ua) {
 // ---------------------------------------------------------------- driver
 
 (async () => {
-  const exits = loadExits();
+  // The pool is optional: no line from the user's own pool files (--pool /
+  // ITKK_PROXIES — the lab dumps do not exist on a user's machine) means there
+  // is nothing to rotate, and the run switches to DIRECT mode. `null` is the
+  // direct sentinel every transport below accepts; local WARP is a lab rail,
+  // not a user pool, so on its own it does not keep the mint in pool mode.
+  let exits = loadExits();
+  if (!exits.some((e) => !e.warp)) {
+    log('no proxy list loaded — running WITHOUT a proxy (direct). Pass --pool <file> to rotate exits per account.');
+    exits = [null];
+  }
   EXITS_GLOBAL = exits;
   // WARP (Cloudflare's own egress) is the one exit measured to hold a TLS
   // session to www.emailnator.com reliably (200 / 52 KB, 2026-10-19); it leads
   // the mail rotation so the code reader never burns a poll on a dead tunnel.
-  const warp = exits.find((e) => e.warp);
+  const warp = exits.find((e) => e && e.warp);
   if (warp) MAIL_EXITS.push(warp);
-  if (!exits.length) throw new Error('no exits loaded');
   loadAccounts();
   const already = new Set(accounts.filter((a) => a.status === 'chat-200').map((a) => a.email));
-  log(`mint start host=${HOST} tag=${TAG} count=${COUNT} conc=${CONC} model=${MODEL} exits=${exits.length}`);
+  log(`mint start host=${HOST} tag=${TAG} count=${COUNT} conc=${CONC} model=${MODEL} exits=${exits.filter(Boolean).length || 'direct'}`);
   report(`- ${new Date().toISOString().slice(11, 16)} · ${NAME} · başladı: count=${COUNT} conc=${CONC} exits=${exits.length} model=${MODEL}`);
 
   // Gate read through rotating exits: free lines die between the pool screen and
@@ -729,10 +770,10 @@ async function groupPlan(exit, ua) {
       const st = await req(cand, BASE + '/api/status', { headers: { accept: 'application/json', origin: BASE, 'user-agent': uaFor(i) }, timeoutMs: 12000 });
       if (st.status === 200 && st.json && st.json.data) gates = st.json.data;
     } catch (e) {
-      log(`  exit ${maskExit(cand.line)} failed the gate read: ${e.message}`);
+      log(`  exit ${maskExit(cand && cand.line)} failed the gate read: ${e.message}`);
     }
   }
-  if (!gates) throw new Error('no exit reached the panel for the gate read');
+  if (!gates) throw new Error(isDirect(exits) ? 'the panel did not answer on the direct route (no proxy list loaded)' : 'no exit reached the panel for the gate read');
   log(`gates register=${gates.register_enabled} email=${gates.email_verification} turnstile=${gates.turnstile_check} pwd=${gates.password_register_enabled} checkin=${gates.checkin_enabled}`);
   if (gates.turnstile_check === true) throw new Error('turnstile_check=true — needs the browser mint');
 
