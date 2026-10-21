@@ -34,7 +34,7 @@
 
 ## ✨ Why this exists
 
-itkk.lol is a New API `v1.0.0-rc.40` panel (system name **ITKK**) with **e-mail-code sign-up**, Turnstile **off**, password registration open and a **100000-quota sign-up credit** (quota_per_unit 500000 → ¥0.20 at display rate). One account = one key; this tool writes a key to `keys.txt` only after the panel's own relay answered 200 with content.
+itkk.lol is a New API `v1.0.0-rc.40` panel (system name **ITKK**) with **e-mail-code sign-up** until 2026-10-19 and **code-free sign-up** since 2026-10-21 (`email_verification=false`), Turnstile **off**, password registration open and a **100000-quota sign-up credit** (quota_per_unit 500000 → ¥0.20 at display rate). One account = one key; this tool writes a key to `keys.txt` only after the panel's own relay answered 200 with content.
 
 ## 🎁 Free tier — how much you get
 
@@ -45,7 +45,7 @@ itkk.lol is a New API `v1.0.0-rc.40` panel (system name **ITKK**) with **e-mail-
 | Sign-up quota | **100000** (`quota_per_unit` 500000, display ¥0.20) |
 | Card required | **No** |
 | Daily check-in | not enabled on this panel (`checkin_enabled:false`) |
-| Sign-up | e-mail code (dotless gmail passes) |
+| Sign-up | **no e-mail code since 2026-10-21** (`email_verification=false`); while the gate was on, a code from the gmail family was required |
 | The unit that scales | **one account = one key** → `--count N` is "N free accounts" |
 
 > 💡 The free tier is set by ITKK (itkk.lol) — 国模 API 中转 and can change. Check the live numbers at [itkk.lol](https://itkk.lol) — and let the tool's own gate decide:
@@ -89,15 +89,16 @@ Requests go through your proxy list when one is provided (`--pool` / `ITKK_PROXI
 
 | Check | Result |
 | --- | --- |
-| `GET /api/status` | **200** — `register_enabled=true`, `email_verification=true`, `turnstile_check=false` |
-| `GET /api/verification?email=<gmail>` | **200** — mail arrives as `ITKK <mail@itkk.lol>`, subject `ITKK邮箱验证邮件`, 6-hex code |
-| `POST /api/user/register` | **200** — account lands in group `default` with quota 100000 |
+| `GET /api/status` | **200** — today `register_enabled=true`, **`email_verification=false`** (was `true` on 2026-10-19), `turnstile_check=false` |
+| `GET /api/verification?email=<gmail>` | **200 while the panel asks for a code** — mail arrives as `ITKK <mail@<panel-mail>>`, subject `ITKK邮箱验证邮件`, 6-hex code; not needed after 2026-10-21 |
+| `POST /api/user/register` | **200** — account lands in group `default` with quota 100000; with the code gate off the body takes `verification_code:""` |
 | `POST /api/user/login` | **200** — `access_token` JWT (+ `session` cookie) |
 | `GET /api/user/self` | **200** — `quota`, `group` |
 | `POST /api/token/` with `group:""` | **200**, but the key never routes: `503 No available channel … under group default` |
 | `POST /api/token/` with a catalogue group | **200** — the bound group is what makes the channel reachable |
 | `POST /api/token/<id>/key` | **200** — plaintext key |
-| `POST /v1/chat/completions` before a key is written | **200** with real content required |
+| `POST /v1/chat/completions` before a key is written | **200** with real content required; an HTTP 200 carrying an upstream error is not accepted |
+| re-verification 2026-10-21 | code gate gone → fresh account (quota 100000) + key on group `China-Ai-次卡` answering `200 "pong"` with `t-deepseek-v4-pro`; **51 of 53 keys** in `keys.txt` answered 200 with real content; a mutated key → `401 Invalid token` |
 
 ## 🧭 How it works
 
@@ -112,7 +113,7 @@ inbox (one address per account)                                  a fresh address
 
 | Step | Call | Notes |
 | --- | --- | --- |
-| code | `GET /api/verification?email=` | dotless gmail works; recycled Emailnator boxes may hold an account (`邮箱地址已被占用`) |
+| code | `GET /api/verification?email=` | **skipped while `email_verification=false`** (2026-10-21). While it was on: dotless gmail works; recycled Emailnator boxes may hold an account (`邮箱地址已被占用`) |
 | signup | `POST /api/user/register` | password registration open, Turnstile off |
 | sign-in | `POST /api/user/login` | JWT in this fork's answer |
 | catalogue | `GET /api/pricing` | `group_ratio`, `usable_group`, per-model `enable_groups` |
@@ -167,7 +168,7 @@ Models are then served as `itkk/<model id>`, load-balanced across every key.
 | | |
 | --- | --- |
 | 🏢 Provider | **ITKK (itkk.lol) — 国模 API 中转** — [itkk.lol](https://itkk.lol) |
-| 🎁 What the provider gives | one account per key — e-mail code sign-up, token bound to a live group, every key chat-200 |
+| 🎁 What the provider gives | one account per key — sign-up without a code since 2026-10-21, token bound to a live group, every key chat-200 |
 | 🔑 What one key gets you | one API key scoped to its own account: the 5 model ids on the endpoint below, at your plan's limits. The quota lives on the **account**, which is exactly why this tool creates one account per key |
 | 🌐 API shape | OpenAI-compatible: `POST https://itkk.lol/v1/chat/completions` |
 | 🔒 Your data | only itkk.lol and the inbox backend you configure are contacted; keys stay on your machine |

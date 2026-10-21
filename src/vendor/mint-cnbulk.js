@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * CN-panel bulk mint (New API forks with `email_verification=true`, no turnstile).
+ * CN-panel bulk mint (New API forks, no turnstile; the e-mail code is read only when
+ * the panel asks for it — `email_verification=false` skips the mailbox wait).
  *
  *   node providers/_community/mint-cnbulk.js --name itkk.lol --base https://itkk.lol \
  *        --tag itkk --count 100 --conc 6 [--model deepseek-v4.1-flash] [--checkin]
@@ -411,6 +412,11 @@ async function mailTry(fn, { tries = 6 } = {}) {
 
 let EXITS_GLOBAL = []; // set once by the driver; `mailTry` rotates inside it
 
+// Set by the driver from `/api/status`: with `email_verification=false` the register
+// body takes an empty code, so a mailbox is only an address holder and waiting for a
+// code burns 180 s per account (measured 2026-10-21 on itkk.lol).
+let MAIL_FREE = false;
+
 /**
  * Fresh mailbox the panel accepts.
  *
@@ -451,6 +457,12 @@ async function newMailbox(exit, { tries = 6 } = {}) {
     await sleep(1500);
   }
   throw new Error('no usable mailbox');
+}
+
+/** Address for a panel that sends no code — the box is never read. */
+async function codeFreeAddress() {
+  const box = await mailTry((e) => emailnator.newAddress(e), { tries: 4 });
+  return box.plain || box;
 }
 
 async function waitCode(exit, plain, startSec, { brandRe, skipIds = null, transport = null, timeoutMs = CODE_WAIT_MS } = {}) {
@@ -551,26 +563,50 @@ async function mintAccount(exits, idx) {
   log(`#${idx} start ${tag} exit=${maskExit(exit && exit.line)}`);
 
   const startSec = Math.floor(Date.now() / 1000);
-  const { box, baseline } = await newMailbox(exit);
-  rec.email = box.plain;
-  log(`#${idx} mailbox ${box.plain}`);
-  rec.status = 'code-sent';
+  let email = null;
+  let code = '';
+  if (MAIL_FREE) {
+    email = await codeFreeAddress();
+    rec.email = email;
+    rec.status = 'code-not-required';
+    log(`#${idx} mailbox ${email} (no code — panel email_verification=false)`);
+  } else {
+    const { box, baseline } = await newMailbox(exit);
+    email = box.plain;
+    rec.email = email;
+    log(`#${idx} mailbox ${email}`);
+    rec.status = 'code-sent';
 
-  const brandRe = new RegExp(`itkk|aimoniker|moniker|${HOST.split('.')[0]}`, 'i');
-  const mail = await waitCode(exit, box.plain, startSec, { brandRe, skipIds: baseline });
-  rec.code_from = mail.from;
-  rec.code_subject = mail.subject;
-  log(`#${idx} code ${mail.code} from ${mail.from} | ${mail.subject}`);
-  rec.status = 'code-read';
+    const brandRe = new RegExp(`itkk|aimoniker|moniker|${HOST.split('.')[0]}`, 'i');
+    const mail = await waitCode(exit, box.plain, startSec, { brandRe, skipIds: baseline });
+    rec.code_from = mail.from;
+    rec.code_subject = mail.subject;
+    log(`#${idx} code ${mail.code} from ${mail.from} | ${mail.subject}`);
+    rec.status = 'code-read';
+    code = mail.code;
+  }
 
-  const reg = await panelCall(exit, '/api/user/register', {
-    method: 'POST',
-    headers: { 'user-agent': ua },
-    body: { username: tag, password, email: box.plain, verification_code: mail.code },
-    timeoutMs: 40000,
-  });
-  log(`#${idx} register ${reg.status} ${String(reg.text).slice(0, 140)}`);
-  if (!reg.json || reg.json.success !== true) throw new Error(`register ${reg.status} ${String(reg.text).slice(0, 200)}`);
+  // A recycled Emailnator box can already hold an account here (`邮箱地址已被占用`) —
+  // `newMailbox` caught that inside the code request, so the code-free path retries
+  // the address itself.
+  let reg;
+  for (let attempt = 0; ; attempt++) {
+    reg = await panelCall(exit, '/api/user/register', {
+      method: 'POST',
+      headers: { 'user-agent': ua },
+      body: { username: tag, password, email, verification_code: code },
+      timeoutMs: 40000,
+    });
+    log(`#${idx} register ${reg.status} ${String(reg.text).slice(0, 140)}`);
+    if (reg.json && reg.json.success === true) break;
+    if (MAIL_FREE && attempt < 2 && /已被占用|already registered|已被注册/i.test(String(reg.text || ''))) {
+      email = await codeFreeAddress();
+      rec.email = email;
+      log(`#${idx} address taken → ${email}`);
+      continue;
+    }
+    throw new Error(`register ${reg.status} ${String(reg.text).slice(0, 200)}`);
+  }
   rec.status = 'registered';
 
   const login = await panelCall(exit, '/api/user/login', {
@@ -775,6 +811,8 @@ async function groupPlan(exit, ua) {
   }
   if (!gates) throw new Error(isDirect(exits) ? 'the panel did not answer on the direct route (no proxy list loaded)' : 'no exit reached the panel for the gate read');
   log(`gates register=${gates.register_enabled} email=${gates.email_verification} turnstile=${gates.turnstile_check} pwd=${gates.password_register_enabled} checkin=${gates.checkin_enabled}`);
+  MAIL_FREE = gates.email_verification === false;
+  if (MAIL_FREE) log('e-mail gate off (email_verification=false) → register carries no code');
   if (gates.turnstile_check === true) throw new Error('turnstile_check=true — needs the browser mint');
 
   let next = 1;

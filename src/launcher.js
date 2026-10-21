@@ -79,7 +79,7 @@ function banner() {
   const bold = '\x1b[1m';
   const reset = '\x1b[0m';
   const title = 'itkk-bulk-apikey';
-  const tagline = "one account per key — e-mail code sign-up, token bound to a live group, every key chat-200";
+  const tagline = "one account per key — sign-up without a code since 2026-10-21, token bound to a live group, every key chat-200";
   const lines = BANNER_LOGO.replace(/^\n/, '').replace(/\n$/, '').split('\n');
   const width = Math.max(...lines.map((l) => [...l].length), [...title].length, [...tagline].length);
   const pad = (s) => s + ' '.repeat(width - [...s].length);

@@ -11,9 +11,10 @@
  * Requests go through your proxy list when one is provided (--pool <file> or
  * ITKK_PROXIES). Without a pool the tool connects directly.
  *
- * Measured gates (2026-10-19, /api/status): register_enabled=true,
- * email_verification=true, turnstile_check=false, password_register=true,
- * checkin_enabled=false → e-mail-code sign-up, no captcha, HTTP-only.
+ * Measured gates (2026-10-21, /api/status): register_enabled=true,
+ * email_verification=false (it was true on 2026-10-19 — the code gate is gone),
+ * turnstile_check=false, password_register=true, checkin_enabled=false → HTTP-only
+ * sign-up; the engine skips the mailbox wait while the code gate is off.
  */
 const argv = process.argv.slice(2);
 process.argv = [
