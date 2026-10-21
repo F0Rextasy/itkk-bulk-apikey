@@ -77,7 +77,7 @@ curl https://itkk.lol/v1/chat/completions \
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Каждый HTTP-вызов уходит через экзит из `proxy-lab/out/*live*.txt` (или WARP `socks5://127.0.0.1:40000`); прямой запрос отклоняется по построению.
+Каждый HTTP-вызов уходит через экзит из `proxy-lab/out/*live*.txt` (или proxy `socks5://127.0.0.1:40000`); прямой запрос отклоняется по построению.
 
 ### 🖱️ Лаунчер
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ За прокси
 
-Экзиты берутся из `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` плюс локальный WARP; каждый аккаунт удерживает один экзит для всех своих вызовов панели, а почтовый канал ротируется по пулу (сначала WARP). Прямой запрос невозможен: `req()` выбрасывает исключение, если экзита нет.
+Экзиты берутся из `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` плюс локальный proxy; каждый аккаунт удерживает один экзит для всех своих вызовов панели, а почтовый канал ротируется по пулу (сначала proxy). Прямой запрос невозможен: `req()` выбрасывает исключение, если экзита нет.
 
 ## 📄 Файлы
 

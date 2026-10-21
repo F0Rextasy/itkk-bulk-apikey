@@ -77,7 +77,7 @@ curl https://itkk.lol/v1/chat/completions \
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-每个 HTTP 请求都通过来自 `proxy-lab/out/*live*.txt` 的出口（或 WARP `socks5://127.0.0.1:40000`）发出；从设计上就拒绝直连请求。
+每个 HTTP 请求都通过来自 `proxy-lab/out/*live*.txt` 的出口（或 proxy `socks5://127.0.0.1:40000`）发出；从设计上就拒绝直连请求。
 
 ### 🖱️ 启动器
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ 在代理之后
 
-出口来自 `proxy-lab/out/exits-emergency-panel-live.txt`、`proxies-emergency*.txt`、`chrome-safe-exits.txt`、`captcha-exits-live.txt` 以及本地 WARP；每个账号在其所有面板调用中固定使用一个出口，而邮件通道则在出口池中轮换（优先 WARP）。不可能发起直连请求：没有出口时 `req()` 会抛出异常。
+出口来自 `proxy-lab/out/exits-emergency-panel-live.txt`、`proxies-emergency*.txt`、`chrome-safe-exits.txt`、`captcha-exits-live.txt` 以及本地 proxy；每个账号在其所有面板调用中固定使用一个出口，而邮件通道则在出口池中轮换（优先 proxy）。不可能发起直连请求：没有出口时 `req()` 会抛出异常。
 
 ## 📄 文件
 

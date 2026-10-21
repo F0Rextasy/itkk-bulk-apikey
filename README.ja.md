@@ -77,7 +77,7 @@ curl https://itkk.lol/v1/chat/completions \
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-すべての HTTP 呼び出しは `proxy-lab/out/*live*.txt` の出口（または WARP `socks5://127.0.0.1:40000`）を経由して出ていきます。直接リクエストは仕組み上拒否されます。
+すべての HTTP 呼び出しは `proxy-lab/out/*live*.txt` の出口（または proxy `socks5://127.0.0.1:40000`）を経由して出ていきます。直接リクエストは仕組み上拒否されます。
 
 ### 🖱️ ランチャー
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ プロキシの背後で
 
-出口は `proxy-lab/out/exits-emergency-panel-live.txt`、`proxies-emergency*.txt`、`chrome-safe-exits.txt`、`captcha-exits-live.txt` に加えてローカル WARP から取得されます。各アカウントはそのすべてのパネル呼び出しに対して 1 つの出口を保持し、メール経路はプールをローテーションします（WARP が最優先）。直接リクエストは不可能です:出口がない場合 `req()` は例外を投げます。
+出口は `proxy-lab/out/exits-emergency-panel-live.txt`、`proxies-emergency*.txt`、`chrome-safe-exits.txt`、`captcha-exits-live.txt` に加えてローカル proxy から取得されます。各アカウントはそのすべてのパネル呼び出しに対して 1 つの出口を保持し、メール経路はプールをローテーションします（proxy が最優先）。直接リクエストは不可能です:出口がない場合 `req()` は例外を投げます。
 
 ## 📄 ファイル
 

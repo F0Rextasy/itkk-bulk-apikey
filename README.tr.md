@@ -77,7 +77,7 @@ Model kimliği, tokenin bağlı olduğu gruba ait olmalıdır.
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Her HTTP çağrısı `proxy-lab/out/*live*.txt` içinden bir çıkıştan (veya WARP `socks5://127.0.0.1:40000` üzerinden) geçer; doğrudan istek tasarım gereği reddedilir.
+Her HTTP çağrısı `proxy-lab/out/*live*.txt` içinden bir çıkıştan (veya proxy `socks5://127.0.0.1:40000` üzerinden) geçer; doğrudan istek tasarım gereği reddedilir.
 
 ### 🖱️ Başlatıcı
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ Proksi arkasında
 
-Çıkışlar `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` dosyalarından ve yerel WARP'tan gelir; her hesap, tüm panel çağrıları boyunca tek bir çıkış tutar ve posta hattı havuz içinde dönerek ilerler (önce WARP). Doğrudan istek mümkün değildir: çıkış yoksa `req()` hata fırlatır.
+Çıkışlar `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` dosyalarından ve yerel proxy'tan gelir; her hesap, tüm panel çağrıları boyunca tek bir çıkış tutar ve posta hattı havuz içinde dönerek ilerler (önce proxy). Doğrudan istek mümkün değildir: çıkış yoksa `req()` hata fırlatır.
 
 ## 📄 Dosyalar
 

@@ -138,7 +138,7 @@ function loadExits() {
   const files = [...POOL_FILES, 'warp'];
   for (const f of files) {
     if (f === 'warp') {
-      // Operator rail: local WARP endpoint, always present, never our own address.
+      // Operator rail: local proxy endpoint, always present, never our own address.
       // It must go through parseProxy like every other line — a hand-built object
       // has no `host`/`port`, and `createAgent` then answers
       // "The \"options\" or \"port\" or \"path\" argument must be specified",
@@ -517,7 +517,7 @@ async function mintAccount(exits, idx) {
   const ua = uaFor(idx);
   // The exit is proven against /api/status before any account state exists.
   // Serial screening burned a 15 s timeout per dead free line (the first launch
-  // died on exactly that), so candidates are raced in parallel and local WARP —
+  // died on exactly that), so candidates are raced in parallel and local proxy —
   // measured to reach this panel — is the guaranteed last candidate. DIRECT
   // mode (no pool loaded, the single `null` sentinel) skips the screening and
   // runs the account on this machine's own line.
@@ -742,7 +742,7 @@ async function groupPlan(exit, ua) {
   // The pool is optional: no line from the user's own pool files (--pool /
   // ITKK_PROXIES — the lab dumps do not exist on a user's machine) means there
   // is nothing to rotate, and the run switches to DIRECT mode. `null` is the
-  // direct sentinel every transport below accepts; local WARP is a lab rail,
+  // direct sentinel every transport below accepts; local proxy is a lab rail,
   // not a user pool, so on its own it does not keep the mint in pool mode.
   let exits = loadExits();
   if (!exits.some((e) => !e.warp)) {
@@ -750,7 +750,7 @@ async function groupPlan(exit, ua) {
     exits = [null];
   }
   EXITS_GLOBAL = exits;
-  // WARP (Cloudflare's own egress) is the one exit measured to hold a TLS
+  // proxy (Cloudflare's own egress) is the one exit measured to hold a TLS
   // session to www.emailnator.com reliably (200 / 52 KB, 2026-10-19); it leads
   // the mail rotation so the code reader never burns a poll on a dead tunnel.
   const warp = exits.find((e) => e && e.warp);

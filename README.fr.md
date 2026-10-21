@@ -77,7 +77,7 @@ L'identifiant du modèle doit appartenir au groupe auquel le jeton est lié.
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Chaque appel HTTP sort par une sortie de `proxy-lab/out/*live*.txt` (ou WARP `socks5://127.0.0.1:40000`) ; une requête directe est refusée par construction.
+Chaque appel HTTP sort par une sortie de `proxy-lab/out/*live*.txt` (ou proxy `socks5://127.0.0.1:40000`) ; une requête directe est refusée par construction.
 
 ### 🖱️ Le lanceur
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ Derrière un proxy
 
-Les sorties proviennent de `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` ainsi que du WARP local ; chaque compte conserve une sortie pour tous ses appels au panneau et le rail mail tourne dans le pool (WARP en premier). Aucune requête directe n'est possible : `req()` lève une erreur quand il n'y a pas de sortie.
+Les sorties proviennent de `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` ainsi que du proxy local ; chaque compte conserve une sortie pour tous ses appels au panneau et le rail mail tourne dans le pool (proxy en premier). Aucune requête directe n'est possible : `req()` lève une erreur quand il n'y a pas de sortie.
 
 ## 📄 Fichiers
 

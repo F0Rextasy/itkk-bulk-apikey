@@ -77,7 +77,7 @@ curl https://itkk.lol/v1/chat/completions \
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-모든 HTTP 호출은 `proxy-lab/out/*live*.txt`의 출구(또는 WARP `socks5://127.0.0.1:40000`)를 통해 나갑니다. 직접 요청은 구조적으로 거부됩니다.
+모든 HTTP 호출은 `proxy-lab/out/*live*.txt`의 출구(또는 proxy `socks5://127.0.0.1:40000`)를 통해 나갑니다. 직접 요청은 구조적으로 거부됩니다.
 
 ### 🖱️ 런처
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ 프록시 뒤에서
 
-출구는 `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` 및 로컬 WARP에서 가져옵니다. 각 계정은 모든 패널 호출에 대해 출구 하나를 유지하며, 메일 레일은 풀을 순환합니다(WARP 우선). 직접 요청은 불가능합니다: 출구가 없으면 `req()`가 예외를 던집니다.
+출구는 `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` 및 로컬 proxy에서 가져옵니다. 각 계정은 모든 패널 호출에 대해 출구 하나를 유지하며, 메일 레일은 풀을 순환합니다(proxy 우선). 직접 요청은 불가능합니다: 출구가 없으면 `req()`가 예외를 던집니다.
 
 ## 📄 파일
 

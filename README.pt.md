@@ -77,7 +77,7 @@ O id do modelo precisa pertencer ao grupo ao qual o token está vinculado.
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Toda chamada HTTP sai por uma saída de `proxy-lab/out/*live*.txt` (ou WARP `socks5://127.0.0.1:40000`); uma requisição direta é recusada por construção.
+Toda chamada HTTP sai por uma saída de `proxy-lab/out/*live*.txt` (ou proxy `socks5://127.0.0.1:40000`); uma requisição direta é recusada por construção.
 
 ### 🖱️ O lançador
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ Atrás de um proxy
 
-As saídas vêm de `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` mais o WARP local; cada conta mantém uma saída para todas as suas chamadas ao painel, e o trilho de e-mail alterna pelo pool (WARP primeiro). Nenhuma requisição direta é possível: `req()` lança erro quando não há saída.
+As saídas vêm de `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` mais o proxy local; cada conta mantém uma saída para todas as suas chamadas ao painel, e o trilho de e-mail alterna pelo pool (proxy primeiro). Nenhuma requisição direta é possível: `req()` lança erro quando não há saída.
 
 ## 📄 Arquivos
 

@@ -140,7 +140,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 - **With a pool:** pass `--pool <file>` (or set `ITKK_PROXIES`) and every request goes through an exit from that list — one account holds one exit for all of its panel calls, and the mail rail rotates through the pool.
 - **Without a pool:** the CLI prints `running WITHOUT a proxy (direct)` and connects directly — sign-up, code reading, the token/group walk and the chat gate all run the same way.
 
-The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local WARP; there each account holds one exit for all of its panel calls and the mail rail rotates through the pool (WARP first).
+The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local proxy; there each account holds one exit for all of its panel calls and the mail rail rotates through the pool (proxy first).
 
 ## 📄 Files
 

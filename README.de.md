@@ -77,7 +77,7 @@ Die Modell-ID muss zu der Gruppe gehören, an die das Token gebunden ist.
 node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Jeder HTTP-Aufruf geht über einen Exit aus `proxy-lab/out/*live*.txt` (oder WARP `socks5://127.0.0.1:40000`); eine direkte Anfrage wird konstruktionsbedingt abgelehnt.
+Jeder HTTP-Aufruf geht über einen Exit aus `proxy-lab/out/*live*.txt` (oder proxy `socks5://127.0.0.1:40000`); eine direkte Anfrage wird konstruktionsbedingt abgelehnt.
 
 ### 🖱️ Der Launcher
 
@@ -131,7 +131,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 
 ## 🛰️ Hinter einem Proxy
 
-Exits stammen aus `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus lokalem WARP; jedes Konto hält einen Exit für alle seine Panel-Aufrufe, und die Mail-Schiene rotiert durch den Pool (WARP zuerst). Eine direkte Anfrage ist nicht möglich: `req()` wirft einen Fehler, wenn kein Exit vorhanden ist.
+Exits stammen aus `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus lokalem proxy; jedes Konto hält einen Exit für alle seine Panel-Aufrufe, und die Mail-Schiene rotiert durch den Pool (proxy zuerst). Eine direkte Anfrage ist nicht möglich: `req()` wirft einen Fehler, wenn kein Exit vorhanden ist.
 
 ## 📄 Dateien
 
