@@ -88,6 +88,11 @@ Requests go through your proxy list when one is provided (`--pool` / `ITKK_PROXI
 
 ## ✅ Verified working — every key is tested
 
+> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
+> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
+> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
+> a dead key or a dead provider is dropped instead of added. Works with **9Router and OmniRoute**.
+
 | Check | Result |
 | --- | --- |
 | `GET /api/status` | **200** — today `register_enabled=true`, **`email_verification=false`** (was `true` on 2026-10-19), `turnstile_check=false` |
@@ -163,7 +168,6 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 ```
 
 Models are then served as `itkk/<model id>`, load-balanced across every key.
-
 
 ## 🔌 Connect to OmniRoute
 

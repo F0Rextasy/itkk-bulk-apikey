@@ -18,6 +18,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-5%20served-412991?style=for-the-badge)](https://itkk.lol)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Démarrage rapide](#-quick-start) · [🎁 Offre gratuite](#-free-tier--how-much-you-get) · [🤖 Modèles](#-models--all-5-of-them) · [🧪 Utiliser l'API](#-how-to-use-the-api) · [✅ Vérifié](#-verified-working--every-key-is-tested) · [🧭 Comment ça marche](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problèmes](#-issues)
@@ -164,6 +165,16 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 
 Les modèles sont alors servis sous `itkk/<model id>`, répartis sur toutes les clés.
 
+## 🔌 Se connecter à OmniRoute
+
+[OmniRoute](https://omniroute.online) est un routeur auto-hébergé, compatible OpenAI. Une seule commande transforme `keys.txt` en un nœud fournisseur avec des combos fonctionnels :
+
+```bash
+node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
+  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+```
+
+Les modèles sont alors servis sous `itkk/<model id>`, répartis sur toutes les clés.
 ## 🔑 Ce qu'une clé vous donne
 
 | | |
