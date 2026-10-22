@@ -74,6 +74,7 @@ El id del modelo debe pertenecer al grupo al que está vinculado el token.
 ## 🛠 Inicio rápido
 
 ```bash
+
 # 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
 printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
 
