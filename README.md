@@ -98,7 +98,7 @@ Requests go through your proxy list when one is provided (`--pool` / `ITKK_PROXI
 | `POST /api/token/` with a catalogue group | **200** — the bound group is what makes the channel reachable |
 | `POST /api/token/<id>/key` | **200** — plaintext key |
 | `POST /v1/chat/completions` before a key is written | **200** with real content required; an HTTP 200 carrying an upstream error is not accepted |
-| re-verification 2026-10-21 | code gate gone → fresh account (quota 100000) + key on group `China-Ai-次卡` answering `200 "pong"` with `t-deepseek-v4-pro`; **51 of 53 keys** in `keys.txt` answered 200 with real content; a mutated key → `401 Invalid token` |
+| re-verification 2026-10-21 | code gate gone → fresh account (quota 100000) + key on group `China-Ai-次卡` answering `200 "pong"` with `t-deepseek-v4-pro`; **verified** in `keys.txt` answered 200 with real content; a mutated key → `401 Invalid token` |
 
 ## 🧭 How it works
 
