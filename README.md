@@ -21,7 +21,7 @@
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
-[🛠 Quick start](#-quick-start) · [🎁 Free tier](#-free-tier--how-much-you-get) · [🤖 Models](#-models--all-5-of-them) · [🧪 Use the API](#-how-to-use-the-api) · [✅ Verified](#-verified-working--every-key-is-tested) · [🧭 How it works](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
+[🛠 Quick start](#-quick-start) · [🎁 Free tier](#-free-tier--how-much-you-get) · [🤖 Models](#-models--all-5-of-them) · [🧪 Use the API](#-how-to-use-the-api) · [✅ Verified](#-verified-working--every-key-is-tested) · [🧭 How it works](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
 
 </div>
 
@@ -75,36 +75,35 @@ The model id must belong to the group the token is bound to.
 ## 🛠 Quick start
 
 ```bash
-# 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
-printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
-
-# 2) go
-node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash --pool proxies.txt
+node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Requests go through your proxy list when one is provided (`--pool` / `ITKK_PROXIES`); without a pool the tool connects directly. A key reaches `keys.txt` in either mode — still only after a live chat 200.
+Every HTTP call leaves through an exit from `proxy-lab/out/*live*.txt` (or WARP `socks5://127.0.0.1:40000`); a direct request is refused by construction.
 
 ### 🖱️ The launcher
 
 ## ✅ Verified working — every key is tested
 
-> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
-> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
-> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
-> a dead key or a dead provider is dropped instead of added. Works with **9Router and OmniRoute**.
-
 | Check | Result |
 | --- | --- |
 | `GET /api/status` | **200** — today `register_enabled=true`, **`email_verification=false`** (was `true` on 2026-10-19), `turnstile_check=false` |
-| `GET /api/verification?email=<gmail>` | **200 while the panel asks for a code** — mail arrives as `ITKK <mail@<panel-mail>>`, subject `ITKK邮箱验证邮件`, 6-hex code; not needed after 2026-10-21 |
+| `GET /api/verification?email=<gmail>` | **200 while the panel asks for a code** — mail arrives as `ITKK <mail@<panel>>`, subject `ITKK邮箱验证邮件`, 6-hex code; not needed after 2026-10-21 |
 | `POST /api/user/register` | **200** — account lands in group `default` with quota 100000; with the code gate off the body takes `verification_code:""` |
 | `POST /api/user/login` | **200** — `access_token` JWT (+ `session` cookie) |
 | `GET /api/user/self` | **200** — `quota`, `group` |
 | `POST /api/token/` with `group:""` | **200**, but the key never routes: `503 No available channel … under group default` |
 | `POST /api/token/` with a catalogue group | **200** — the bound group is what makes the channel reachable |
 | `POST /api/token/<id>/key` | **200** — plaintext key |
-| `POST /v1/chat/completions` before a key is written | **200** with real content required; an HTTP 200 carrying an upstream error is not accepted |
-| re-verification 2026-10-21 | code gate gone → fresh account (quota 100000) + key on group `China-Ai-次卡` answering `200 "pong"` with `t-deepseek-v4-pro`; **verified** in `keys.txt` answered 200 with real content; a mutated key → `401 Invalid token` |
+| `POST /v1/chat/completions` before a key is written | **200** with real content required; the panel also answers HTTP 200 carrying an upstream error, and that degraded body is rejected |
+| e-mail domain policy | **gmail family only while a code is requested** — `hotmail/outlook` and `mail.tm` domains answer `200 {"code":"EMAIL_ADDRESS_REJECTED"…}` |
+| final yield 2026-10-19 | **chat-200 keys** from 175 attempts, then a mail-delivery wall (Gmail bounced the panel's messages to the mailboxes the panel accepts) — `out/mail-wall-evidence.json` |
+| re-verification 2026-10-21 | code gate gone → fresh account `itkke8cfb8` (quota 100000) + key on group `China-Ai-次卡` answering `200 "pong"` with `t-deepseek-v4-pro`; every key in `keys.txt` answered 200 with real content; mutated key → `401 Invalid token` |
+
+> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
+> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
+> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
+> a dead key or a dead provider is dropped instead of added. Re-run the verify step any time;
+> failures are reported, never hidden.
 
 ## 🧭 How it works
 
@@ -119,8 +118,8 @@ inbox (one address per account)                                  a fresh address
 
 | Step | Call | Notes |
 | --- | --- | --- |
-| code | `GET /api/verification?email=` | **skipped while `email_verification=false`** (2026-10-21). While it was on: dotless gmail works; recycled Emailnator boxes may hold an account (`邮箱地址已被占用`) |
-| signup | `POST /api/user/register` | password registration open, Turnstile off |
+| code | `GET /api/verification?email=` | **skipped while `email_verification=false`** (2026-10-21): the mint reads the gate and registers with an empty code. While it was on: dotless gmail works; recycled Emailnator boxes may hold an account (`邮箱地址已被占用`) |
+| signup | `POST /api/user/register` | password registration open, Turnstile off; `verification_code` is empty when the gate is off |
 | sign-in | `POST /api/user/login` | JWT in this fork's answer |
 | catalogue | `GET /api/pricing` | `group_ratio`, `usable_group`, per-model `enable_groups` |
 | token | `POST /api/token/` `{group, model_limits}` | without a group the key answers 503 |
@@ -138,7 +137,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 | `--count` | 5 | accounts to attempt |
 | `--conc` | 4 | parallel accounts |
 | `--model` | `deepseek-v4.1-flash` | model the gate prefers |
-| `--pool <file>` | built-in list | optional exit file (`ITKK_PROXIES` env works too) |
+| `--pool <file>` | built-in list | extra exit file |
 
 ## 🛰️ Behind a proxy
 
@@ -147,7 +146,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 - **With a pool:** pass `--pool <file>` (or set `ITKK_PROXIES`) and every request goes through an exit from that list — one account holds one exit for all of its panel calls, and the mail rail rotates through the pool.
 - **Without a pool:** the CLI prints `running WITHOUT a proxy (direct)` and connects directly — sign-up, code reading, the token/group walk and the chat gate all run the same way.
 
-The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local proxy; there each account holds one exit for all of its panel calls and the mail rail rotates through the pool (proxy first).
+The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` plus local WARP; there each account holds one exit for all of its panel calls and the mail rail rotates through the pool (WARP first).
 
 ## 📄 Files
 
@@ -179,6 +178,7 @@ node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
 ```
 
 Models are then served as `itkk/<model id>`, load-balanced across every key.
+
 ## 🔑 What one key gets you
 
 | | |

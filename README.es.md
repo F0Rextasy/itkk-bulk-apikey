@@ -1,6 +1,7 @@
 <div align="center">
 
 ```
+
 ██╗████████╗██╗  ██╗██╗  ██╗
 ██║╚══██╔══╝██║ ██╔╝██║ ██╔╝
 ██║   ██║   █████╔╝ █████╔╝
@@ -21,7 +22,7 @@
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
-[🛠 Inicio rápido](#-quick-start) · [🎁 Nivel gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-5-of-them) · [🧪 Usar la API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Cómo funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Opciones](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
+[🛠 Inicio rápido](#-quick-start) · [🎁 Nivel gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-5-of-them) · [🧪 Usar la API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Cómo funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Opciones](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
 
 </div>
 
@@ -45,19 +46,19 @@ itkk.lol es un panel New API `v1.0.0-rc.40` (nombre del sistema **ITKK**) con **
 | --- | --- |
 | Cuota de registro | **100000** (`quota_per_unit` 500000, muestra ¥0.20) |
 | Tarjeta requerida | **No** |
-| Registro diario | no habilitado en este panel (`checkin_enabled:false`) |
-| Registro | **sin código de correo electrónico desde el 2026-10-21** (`email_verification=false`); mientras la puerta estuvo activa, se requería un código de la familia gmail |
+| Check-in diario | no habilitado en este panel (`checkin_enabled:false`) |
+| Registro | **sin código de correo electrónico desde el 2026-10-21** (`email_verification=false`); mientras la barrera estuvo activa, se requería un código de la familia gmail |
 | La unidad que escala | **una cuenta = una clave** → `--count N` es "N cuentas gratuitas" |
 
-> 💡 El nivel gratuito lo define ITKK (itkk.lol) — 国模 API 中转 y puede cambiar. Consulta los números en vivo en [itkk.lol](https://itkk.lol) — y deja que la propia puerta de la herramienta decida:
+> 💡 El nivel gratuito lo define ITKK (itkk.lol) — 国模 API 中转 y puede cambiar. Consulta los números en vivo en [itkk.lol](https://itkk.lol) — y deja que la propia barrera de la herramienta decida:
 
 ```bash
 node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
 ```
 
-## 🤖 Modelos — los 5 en total
+## 🤖 Modelos — los 5
 
-El catálogo está **vinculado a grupos**: una cuenta nueva cae en `default`, que no tiene canales para *nada* — un token creado sin grupo responde `503 No available channel for model X under group default (distributor)`. `/api/pricing` publica `group_ratio` + `enable_groups` por modelo, y el mint vincula el token a uno de esos grupos antes de probar. Ids en vivo medidos el 2026-10-19: `deepseek-v4.1-flash` (grupo `China-Ai-flash`, 0.1×), `glm-5.3-flash` (`China-Ai-flash`), `glm-5.3` (`China-Ai-福利`, 0.05×), `deepseek-v4-pro` (`China-Ai-福利`), `kimi-k3` (`China-Ai-福利`).
+El catálogo está **vinculado a grupos**: una cuenta nueva cae en `default`, que no tiene canales para *nada* — un token creado sin un grupo responde `503 No available channel for model X under group default (distributor)`. `/api/pricing` publica `group_ratio` + `enable_groups` por modelo, y el mint vincula el token a uno de esos grupos antes de probar. Ids en vivo medidos el 2026-10-19: `deepseek-v4.1-flash` (grupo `China-Ai-flash`, 0.1×), `glm-5.3-flash` (`China-Ai-flash`), `glm-5.3` (`China-Ai-福利`, 0.05×), `deepseek-v4-pro` (`China-Ai-福利`), `kimi-k3` (`China-Ai-福利`).
 
 ## 🧪 Cómo usar la API
 
@@ -75,32 +76,35 @@ El id del modelo debe pertenecer al grupo al que está vinculado el token.
 ## 🛠 Inicio rápido
 
 ```bash
-
-# 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
-printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
-
-# 2) go
-node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash --pool proxies.txt
+node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Las solicitudes pasan por tu lista de proxies cuando se proporciona una (`--pool` / `ITKK_PROXIES`); sin un pool, la herramienta se conecta directamente. Una clave llega a `keys.txt` en cualquiera de los dos modos — pero solo después de un chat en vivo con 200.
+Cada llamada HTTP sale a través de una salida de `proxy-lab/out/*live*.txt` (o WARP `socks5://127.0.0.1:40000`); una solicitud directa se rechaza por diseño.
 
 ### 🖱️ El lanzador
 
-## ✅ Verificado funcionando — cada clave se prueba
+## ✅ Verificado y funcionando — cada clave se prueba
 
 | Comprobación | Resultado |
 | --- | --- |
 | `GET /api/status` | **200** — hoy `register_enabled=true`, **`email_verification=false`** (era `true` el 2026-10-19), `turnstile_check=false` |
-| `GET /api/verification?email=<gmail>` | **200 mientras el panel pide un código** — el correo llega como `ITKK <mail@<panel-mail>>`, asunto `ITKK邮箱验证邮件`, código de 6 hex; no es necesario después del 2026-10-21 |
-| `POST /api/user/register` | **200** — la cuenta cae en el grupo `default` con cuota 100000; con la puerta de código desactivada el cuerpo acepta `verification_code:""` |
+| `GET /api/verification?email=<gmail>` | **200 mientras el panel pide un código** — el correo llega como `ITKK <mail@<panel>>`, asunto `ITKK邮箱验证邮件`, código de 6 hex; no es necesario después del 2026-10-21 |
+| `POST /api/user/register` | **200** — la cuenta cae en el grupo `default` con cuota 100000; con la barrera de código desactivada el cuerpo acepta `verification_code:""` |
 | `POST /api/user/login` | **200** — `access_token` JWT (+ cookie `session`) |
 | `GET /api/user/self` | **200** — `quota`, `group` |
 | `POST /api/token/` con `group:""` | **200**, pero la clave nunca enruta: `503 No available channel … under group default` |
 | `POST /api/token/` con un grupo del catálogo | **200** — el grupo vinculado es lo que hace alcanzable el canal |
 | `POST /api/token/<id>/key` | **200** — clave en texto plano |
-| `POST /v1/chat/completions` antes de escribir una clave | **200** con contenido real requerido; un HTTP 200 que lleva un error del upstream no se acepta |
-| reverificación 2026-10-21 | la puerta de código desapareció → cuenta nueva (cuota 100000) + clave en el grupo `China-Ai-次卡` respondiendo `200 "pong"` con `t-deepseek-v4-pro`; **51 de 53 claves** en `keys.txt` respondieron 200 con contenido real; una clave mutada → `401 Invalid token` |
+| `POST /v1/chat/completions` antes de escribir una clave | **200** con contenido real requerido; el panel también responde HTTP 200 con un error de upstream, y ese cuerpo degradado se rechaza |
+| política de dominio de correo | **solo familia gmail mientras se solicita un código** — los dominios `hotmail/outlook` y `mail.tm` responden `200 {"code":"EMAIL_ADDRESS_REJECTED"…}` |
+| rendimiento final 2026-10-19 | **claves con chat-200** de 175 intentos, luego un muro de entrega de correo (Gmail rebotó los mensajes del panel a los buzones que el panel acepta) — `out/mail-wall-evidence.json` |
+| re-verificación 2026-10-21 | barrera de código eliminada → cuenta nueva `itkke8cfb8` (cuota 100000) + clave en el grupo `China-Ai-次卡` respondiendo `200 "pong"` con `t-deepseek-v4-pro`; cada clave en `keys.txt` respondió 200 con contenido real; clave mutada → `401 Invalid token` |
+
+> **Barreras de calidad.** Cada clave aquí pasó un `chat-200` en vivo antes de escribirse en `keys.txt`
+> (las claves muertas nunca se envían). Las combinaciones del router siguen la misma regla a nivel de modelo: una entrada se
+> añade **solo si el modelo responde `chat-200` y puede llamar herramientas** — un modelo sin soporte de herramientas,
+> una clave muerta o un proveedor muerto se descarta en lugar de añadirse. Vuelve a ejecutar el paso de verificación en cualquier momento;
+> los fallos se reportan, nunca se ocultan.
 
 ## 🧭 Cómo funciona
 
@@ -115,13 +119,13 @@ inbox (one address per account)                                  a fresh address
 
 | Paso | Llamada | Notas |
 | --- | --- | --- |
-| código | `GET /api/verification?email=` | **omitido mientras `email_verification=false`** (2026-10-21). Mientras estuvo activo: gmail sin puntos funciona; los buzones reciclados de Emailnator pueden tener una cuenta (`邮箱地址已被占用`) |
-| registro | `POST /api/user/register` | registro con contraseña abierto, Turnstile desactivado |
+| código | `GET /api/verification?email=` | **omitido mientras `email_verification=false`** (2026-10-21): el mint lee la barrera y se registra con un código vacío. Mientras estuvo activa: gmail sin puntos funciona; los buzones reciclados de Emailnator pueden tener una cuenta (`邮箱地址已被占用`) |
+| registro | `POST /api/user/register` | registro con contraseña abierto, Turnstile desactivado; `verification_code` está vacío cuando la barrera está desactivada |
 | inicio de sesión | `POST /api/user/login` | JWT en la respuesta de este fork |
 | catálogo | `GET /api/pricing` | `group_ratio`, `usable_group`, `enable_groups` por modelo |
 | token | `POST /api/token/` `{group, model_limits}` | sin un grupo la clave responde 503 |
 | clave | `POST /api/token/<id>/key` | texto plano |
-| comprobación | `POST /v1/chat/completions` | se requiere un 200 en vivo antes de `keys.txt` |
+| comprobación | `POST /v1/chat/completions` | se requiere 200 en vivo antes de `keys.txt` |
 
 ## ⚙️ Opciones de CLI
 
@@ -133,17 +137,17 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 | --- | --- | --- |
 | `--count` | 5 | cuentas a intentar |
 | `--conc` | 4 | cuentas en paralelo |
-| `--model` | `deepseek-v4.1-flash` | modelo que prefiere la puerta |
-| `--pool <file>` | lista integrada | archivo de salida opcional (la variable de entorno `ITKK_PROXIES` también funciona) |
+| `--model` | `deepseek-v4.1-flash` | modelo que prefiere la barrera |
+| `--pool <file>` | lista integrada | archivo de salidas adicional |
 
 ## 🛰️ Detrás de un proxy
 
-**Opcional — recomendado a escala (límites por IP, bloqueos).** La herramienta también funciona sin proxy.
+**Opcional — recomendado a escala (límites por IP, baneos).** La herramienta también funciona sin proxy.
 
-- **Con un pool:** pasa `--pool <file>` (o define `ITKK_PROXIES`) y cada solicitud pasa por una salida de esa lista — una cuenta mantiene una salida para todas sus llamadas al panel, y el riel de correo rota por el pool.
-- **Sin un pool:** la CLI imprime `running WITHOUT a proxy (direct)` y se conecta directamente — el registro, la lectura de códigos, el recorrido de token/grupo y la puerta de chat se ejecutan de la misma manera.
+- **Con un pool:** pasa `--pool <file>` (o define `ITKK_PROXIES`) y cada solicitud pasa por una salida de esa lista — una cuenta mantiene una salida para todas sus llamadas al panel, y el riel de correo rota a través del pool.
+- **Sin un pool:** la CLI imprime `running WITHOUT a proxy (direct)` y se conecta directamente — el registro, la lectura de códigos, el recorrido de token/grupo y la barrera de chat funcionan igual.
 
-El suministro propio del laboratorio: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` más proxy local; allí cada cuenta mantiene una salida para todas sus llamadas al panel y el riel de correo rota por el pool (proxy primero).
+El suministro propio del laboratorio: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-emergency*.txt`, `chrome-safe-exits.txt`, `captcha-exits-live.txt` más WARP local; allí cada cuenta mantiene una salida para todas sus llamadas al panel y el riel de correo rota a través del pool (WARP primero).
 
 ## 📄 Archivos
 
@@ -152,11 +156,11 @@ El suministro propio del laboratorio: `proxy-lab/out/exits-emergency-panel-live.
 | `keys.txt` | una clave con chat-200 por línea |
 | `keys-unfunded.txt` | claves cuya cuenta no pudo alcanzar un grupo en vivo |
 | `accounts.json` | usuario / contraseña / correo / cuota / grupo / intentos por cuenta |
-| `out/mint-<date>.log` | registro de ejecución sin procesar |
+| `out/mint-<date>.log` | registro en bruto de la ejecución |
 
 ## 🔌 Conectar con 9Router
 
-[9Router](https://9router.com) es un router autoalojado compatible con OpenAI. Un comando convierte `keys.txt` en un nodo proveedor con combos funcionales:
+[9Router](https://9router.com) es un router autoalojado compatible con OpenAI. Un comando convierte `keys.txt` en un nodo proveedor con combinaciones funcionales:
 
 ```bash
 node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
@@ -167,7 +171,7 @@ Los modelos se sirven entonces como `itkk/<model id>`, con balanceo de carga ent
 
 ## 🔌 Conectar con OmniRoute
 
-[OmniRoute](https://omniroute.online) es un router autoalojado compatible con OpenAI. Un comando convierte `keys.txt` en un nodo proveedor con combos funcionales:
+[OmniRoute](https://omniroute.online) es un router autoalojado compatible con OpenAI. Un comando convierte `keys.txt` en un nodo proveedor con combinaciones funcionales:
 
 ```bash
 node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
@@ -175,6 +179,7 @@ node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
 ```
 
 Los modelos se sirven entonces como `itkk/<model id>`, con balanceo de carga entre todas las claves.
+
 ## 🔑 Qué te da una clave
 
 | | |
@@ -182,8 +187,8 @@ Los modelos se sirven entonces como `itkk/<model id>`, con balanceo de carga ent
 | 🏢 Proveedor | **ITKK (itkk.lol) — 国模 API 中转** — [itkk.lol](https://itkk.lol) |
 | 🎁 Qué da el proveedor | una cuenta por clave — registro sin código desde el 2026-10-21, token vinculado a un grupo en vivo, cada clave con chat-200 |
 | 🔑 Qué te da una clave | una clave API limitada a su propia cuenta: los 5 ids de modelo en el endpoint de abajo, a los límites de tu plan. La cuota vive en la **cuenta**, que es exactamente por lo que esta herramienta crea una cuenta por clave |
-| 🌐 Forma de la API | Compatible con OpenAI: `POST https://itkk.lol/v1/chat/completions` |
-| 🔒 Tus datos | solo se contacta a itkk.lol y al backend de buzón que configures; las claves permanecen en tu máquina |
+| 🌐 Forma de la API | compatible con OpenAI: `POST https://itkk.lol/v1/chat/completions` |
+| 🔒 Tus datos | solo se contacta con itkk.lol y el backend de buzón que configures; las claves permanecen en tu máquina |
 
 ## 🐞 Problemas
 
