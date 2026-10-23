@@ -16,6 +16,14 @@
  * turnstile_check=false, password_register=true, checkin_enabled=false → HTTP-only
  * sign-up; the engine skips the mailbox wait while the code gate is off.
  */
+const path = require('path');
+const fs = require('fs');
+/** Dead keys leave keys.txt and are parked here — repo root, like keys.txt. */
+const KEYS_DEAD = process.env.ITKK_KEYS_DEAD || path.join(path.dirname(process.argv[1]), '..', 'keys-dead.txt');
+/** key<TAB>reason<TAB>ISO date, one line per dead key; the engine calls this on a 401/403. */
+global.__recordDeadKey = (key, reason) => {
+  try { fs.appendFileSync(KEYS_DEAD, `${key}\t${String(reason).replace(/\s+/g, ' ').slice(0, 100)}\t${new Date().toISOString()}\n`); } catch (e) { /* diagnostics must never break the run */ }
+};
 const argv = process.argv.slice(2);
 process.argv = [
   process.argv[0],

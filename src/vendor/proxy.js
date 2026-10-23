@@ -34,6 +34,13 @@ const DEFAULT_TIMEOUT_MS = 35000;
 // sockets in SYN_SENT, mostly our own screens, while ICMP was clean).
 const DEFAULT_CONNECT_TIMEOUT_MS = 8000;
 
+/** A black-hole exit accepts the tunnel and then never answers the TLS hello.
+ *  The handshake therefore gets a ceiling of its own: never the caller's
+ *  request budget (the mint hands the chat step 150 s), or one dead line stalls
+ *  the wave. 15 s fails that exit as a normal per-exit error and the rotation
+ *  moves to the next line. */
+const HS_TIMEOUT_MS = 15000;
+
 /** Accepted line shapes:
  *    host:port
  *    host:port:user:pass        (some lists put credentials after the port)
@@ -169,12 +176,12 @@ function parseProxyText(text) {
 
 function once(emitter, event, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const timer = timeoutMs
-      ? setTimeout(() => {
-          cleanup();
-          reject(new Error(`timeout waiting for ${event}`));
-        }, timeoutMs)
-      : null;
+    // Never unbounded: a missing or zero budget falls back to the cap, so a
+    // black-hole exit always ends as a normal per-exit error.
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error(`timeout waiting for ${event}`));
+    }, timeoutMs || HS_TIMEOUT_MS);
     const onEvent = (...args) => {
       cleanup();
       resolve(args);
@@ -400,10 +407,11 @@ class ProxyAgent extends https.Agent {
     let tunnel = null;
     // Connect phase and handshake phase need different budgets: a dead exit must
     // give up its socket quickly (a 35 s connect timeout left hundreds of
-    // SYN_SENT slots open across the fleet and starved the CPE), while a live
-    // line on a flapping path may legitimately need ~30 s for TLS.
+    // SYN_SENT slots open across the fleet and starved the CPE), and a handshake
+    // that never answers is capped at HS_TIMEOUT_MS — the caller's request
+    // budget (150 s on the chat step) is not a handshake budget.
     const connectMs = this.proxy.connectTimeoutMs || DEFAULT_CONNECT_TIMEOUT_MS;
-    const handshakeMs = this.proxy.timeoutMs || DEFAULT_TIMEOUT_MS;
+    const handshakeMs = Math.min(this.proxy.timeoutMs || DEFAULT_TIMEOUT_MS, HS_TIMEOUT_MS);
     openTunnel(this.proxy, { host, port, timeoutMs: connectMs })
       .then((socket) => {
         tunnel = socket;
@@ -413,7 +421,10 @@ class ProxyAgent extends https.Agent {
           servername: options.servername || host,
           rejectUnauthorized: this.proxy.rejectUnauthorized !== false,
         });
-        return once(tlsSocket, 'secureConnect', handshakeMs).then(() => tlsSocket);
+        return once(tlsSocket, 'secureConnect', handshakeMs).then(() => tlsSocket, (err) => {
+          tlsSocket.destroy();
+          throw err;
+        });
       })
       .then((socket) => callback(null, socket))
       .catch((err) => {
@@ -488,7 +499,7 @@ async function probe(proxy, { host = 'api.ipify.org', port = 443, timeoutMs = 10
   try {
     tunnel = await openTunnel(proxy, { host, port, timeoutMs });
     const tlsSocket = tls.connect({ socket: tunnel, servername: host });
-    await once(tlsSocket, 'secureConnect', timeoutMs);
+    await once(tlsSocket, 'secureConnect', Math.min(timeoutMs || DEFAULT_TIMEOUT_MS, HS_TIMEOUT_MS));
     const ms = Date.now() - started;
     tlsSocket.destroy();
     return { ok: true, ms };

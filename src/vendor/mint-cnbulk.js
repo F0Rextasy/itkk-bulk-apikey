@@ -96,6 +96,9 @@ fs.mkdirSync(path.join(DIR, 'out'), { recursive: true });
 const KEYS = path.join(DIR, 'keys.txt');
 const ACCOUNTS = path.join(DIR, 'accounts.json');
 const LOG = path.join(DIR, 'out', `mint-${new Date().toISOString().slice(0, 10)}.log`);
+/** Dead-key reporting is owned by src/cli.js, which owns the keys-dead.txt path. */
+const keyRejected = (status) => status === 401 || status === 403;
+const recordDeadKey = (key, reason) => { if (typeof global.__recordDeadKey === 'function') global.__recordDeadKey(key, reason); };
 
 const nowIso = () => new Date().toISOString();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -722,6 +725,8 @@ async function mintAccount(exits, idx) {
     state.accounts++;
     return rec;
   }
+  const refused = attempts.filter((a) => keyRejected(a.status));
+  if (key && refused.length) recordDeadKey(key, `chat ${refused.map((a) => a.status).join('/')}`);
   rec.status = 'chat-failed';
   rec.gate = attempts[attempts.length - 1] || null;
   await withLock(() => saveRec(rec));
