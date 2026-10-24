@@ -76,7 +76,7 @@ curl https://itkk.lol/v1/chat/completions \
 ## 🛠 クイックスタート
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
 すべての HTTP 呼び出しは `proxy-lab/out/*live*.txt` の出口（または WARP `socks5://127.0.0.1:40000`）を経由します。直接リクエストは構造上拒否されます。
@@ -130,7 +130,7 @@ inbox (one address per account)                                  a fresh address
 ## ⚙️ CLI オプション
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | フラグ | デフォルト | 意味 |
@@ -163,8 +163,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 [9Router](https://9router.com) はセルフホスト型の OpenAI 互換ルーターです。1 つのコマンドで `keys.txt` を、動作するコンボを持つプロバイダノードに変換します:
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 モデルは `itkk/<model id>` として提供され、すべてのキーにわたってロードバランスされます。
@@ -174,8 +173,7 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 [OmniRoute](https://omniroute.online) はセルフホスト型の OpenAI 互換ルーターです。1 つのコマンドで `keys.txt` を、動作するコンボを持つプロバイダノードに変換します:
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 モデルは `itkk/<model id>` として提供され、すべてのキーにわたってロードバランスされます。

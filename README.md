@@ -75,10 +75,10 @@ The model id must belong to the group the token is bound to.
 ## 🛠 Quick start
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
-Every HTTP call leaves through an exit from `proxy-lab/out/*live*.txt` (or WARP `socks5://127.0.0.1:40000`); a direct request is refused by construction.
+Requests go through your proxy list when one is provided (`--pool <file>` or `ITKK_PROXIES`); without a pool the tool connects directly.
 
 ### 🖱️ The launcher
 
@@ -129,7 +129,7 @@ inbox (one address per account)                                  a fresh address
 ## ⚙️ CLI options
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | Flag | Default | Meaning |
@@ -138,6 +138,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 | `--conc` | 4 | parallel accounts |
 | `--model` | `deepseek-v4.1-flash` | model the gate prefers |
 | `--pool <file>` | built-in list | extra exit file |
+| `--verify-only` | off | re-test every key in `keys.txt` through the panel's own relay — mints nothing |
 
 ## 🛰️ Behind a proxy
 
@@ -156,14 +157,14 @@ The lab's own supply: `proxy-lab/out/exits-emergency-panel-live.txt`, `proxies-e
 | `keys-unfunded.txt` | keys whose account could not reach a live group |
 | `accounts.json` | username / password / email / quota / group / attempts per account |
 | `out/mint-<date>.log` | raw run log |
+| `keys-dead.txt` | keys the panel answered 401/403 for — `key<TAB>reason<TAB>date`, one per line |
 
 ## 🔌 Connect to 9Router
 
 [9Router](https://9router.com) is a self-hosted, OpenAI-compatible router. One command turns `keys.txt` into a provider-node with working combos:
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 Models are then served as `itkk/<model id>`, load-balanced across every key.
@@ -173,8 +174,7 @@ Models are then served as `itkk/<model id>`, load-balanced across every key.
 [OmniRoute](https://omniroute.online) is a self-hosted, OpenAI-compatible router. One command turns `keys.txt` into a provider-node with working combos:
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 Models are then served as `itkk/<model id>`, load-balanced across every key.

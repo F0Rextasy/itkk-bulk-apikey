@@ -76,7 +76,7 @@ Id модели должен принадлежать группе, к кото�
 ## 🛠 Быстрый старт
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
 Каждый HTTP-запрос выходит через exit из `proxy-lab/out/*live*.txt` (или WARP `socks5://127.0.0.1:40000`); прямой запрос отклоняется по построению.
@@ -130,7 +130,7 @@ inbox (один адрес на аккаунт)                                 
 ## ⚙️ Опции CLI
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | Флаг | По умолчанию | Значение |
@@ -163,8 +163,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 [9Router](https://9router.com) — это самостоятельно размещаемый роутер, совместимый с OpenAI. Одна команда превращает `keys.txt` в узел-провайдер с рабочими комбинациями:
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 Модели затем обслуживаются как `itkk/<model id>`, с балансировкой нагрузки по всем ключам.
@@ -174,8 +173,7 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 [OmniRoute](https://omniroute.online) — это самостоятельно размещаемый роутер, совместимый с OpenAI. Одна команда превращает `keys.txt` в узел-провайдер с рабочими комбинациями:
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 Модели затем обслуживаются как `itkk/<model id>`, с балансировкой нагрузки по всем ключам.

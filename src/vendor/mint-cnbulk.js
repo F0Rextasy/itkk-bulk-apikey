@@ -49,6 +49,11 @@ const has = (name) => argv.includes(`--${name}`);
 const NAME = one('name');
 const BASE = (one('base') || '').replace(/\/$/, '');
 const HOST = BASE ? new URL(BASE).host : '';
+
+// Shared/disposable boxes carry other tenants' mail: only a message that names
+// this panel may supply the code (measured 2026-10-24: dddai read a stranger's
+// code from a shared box). Override: --brand / ITKK_BRAND_RE.
+const BRAND = new RegExp(one('brand', process.env.ITKK_BRAND_RE || `itkk|aimoniker|moniker|${HOST.split('.')[0] || NAME || ''}`), 'i');
 const TAG = one('tag', (NAME || 'cn').replace(/[^a-z0-9]/gi, '').slice(0, 10));
 const COUNT = parseInt(one('count', '5'), 10);
 const CONC = Math.max(1, Math.min(12, parseInt(one('conc', '4'), 10)));
@@ -63,6 +68,8 @@ const FALLBACK_MODELS = one('fallback-models', 'deepseek-v4.1-flash,deepseek-cha
   .map((s) => s.trim())
   .filter(Boolean);
 const CHECKIN = has('checkin');
+/** `--verify-only`: no account is created — every key in keys.txt is re-tested. */
+const VERIFY_ONLY = has('verify-only');
 const CODE_WAIT_MS = parseInt(one('code-wait', '180000'), 10);
 const POLL_MS = parseInt(one('poll-ms', '4000'), 10);
 const REPORT = path.join(ROOT, 'proxy-lab', 'out', one('report', 'cn4-mint-a-20261019.md'));
@@ -79,6 +86,8 @@ if (has('help') || has('h')) {
   --model <id>     model the gate prefers          [deepseek-v4.1-flash]
   --pool <file>    exit list, one per line, optional (env ITKK_PROXIES)
   --checkin        call the panel's daily check-in per account
+  --verify-only    re-test every key in keys.txt through the panel's own relay
+  --brand RE       sender/subject fence for the code mail (env ITKK_BRAND_RE)
   --budget SEC     hard stop for the whole run                   [2400]
   --mail <mode>    mailbox backend: emailnator | temptf     [emailnator]
 
@@ -91,7 +100,11 @@ if (!NAME || !BASE) {
   process.exit(2);
 }
 
-const DIR = path.join(ROOT, 'providers', NAME);
+// keys.txt, accounts.json and out/ belong at the repository root: the published
+// build has no `providers/<name>/` layer (that is the monorepo this engine was
+// carved out of) — `DIR = ROOT/providers/<name>` wrote the keys into a stray
+// `providers/` tree next to the CLI (measured 2026-10-24, lane FixCodeErrors).
+const DIR = ROOT;
 fs.mkdirSync(path.join(DIR, 'out'), { recursive: true });
 const KEYS = path.join(DIR, 'keys.txt');
 const ACCOUNTS = path.join(DIR, 'accounts.json');
@@ -468,10 +481,9 @@ async function codeFreeAddress() {
   return box.plain || box;
 }
 
-async function waitCode(exit, plain, startSec, { brandRe, skipIds = null, transport = null, timeoutMs = CODE_WAIT_MS } = {}) {
+async function waitCode(exit, plain, startSec, { skipIds = null, transport = null, timeoutMs = CODE_WAIT_MS } = {}) {
   const deadline = Date.now() + timeoutMs;
   const seen = new Set();
-  let foreign = 0;
   while (Date.now() < deadline) {
     let msgs = [];
     try {
@@ -499,18 +511,16 @@ async function waitCode(exit, plain, startSec, { brandRe, skipIds = null, transp
         }
         text = flatten(full.content || '');
       }
+      const from = String(m.from || '');
+      const subject = String(m.subject || '');
+      // Only the panel's own mail may supply the code: a shared box carries other
+      // tenants' mail (measured 2026-10-24, dddai). Panel mail can arrive from a
+      // third-party address (ai.wxsup.cn mails from a qq.com address), so the body
+      // is part of the hay and the brand must show up in it.
+      if (!BRAND.test(`${from} ${subject} ${text.slice(0, 400)}`)) continue;
       if (!CONTEXT_RE.test(text)) continue;
       const code = extractCode(text);
       if (!code) continue;
-      const from = String(m.from || '');
-      const subject = String(m.subject || '');
-      if (brandRe && !brandRe.test(`${from} ${subject} ${text.slice(0, 400)}`)) {
-        // Panel mail does arrive from third-party addresses (measured on this
-        // wave: ai.wxsup.cn mails from a qq.com address), so a foreign-looking
-        // sender is only accepted once the panel's own brand never showed up.
-        foreign++;
-        if (foreign < 2) continue;
-      }
       return { code, from, subject, text };
     }
     await sleep(POLL_MS);
@@ -580,8 +590,7 @@ async function mintAccount(exits, idx) {
     log(`#${idx} mailbox ${email}`);
     rec.status = 'code-sent';
 
-    const brandRe = new RegExp(`itkk|aimoniker|moniker|${HOST.split('.')[0]}`, 'i');
-    const mail = await waitCode(exit, box.plain, startSec, { brandRe, skipIds: baseline });
+    const mail = await waitCode(exit, box.plain, startSec, { skipIds: baseline });
     rec.code_from = mail.from;
     rec.code_subject = mail.subject;
     log(`#${idx} code ${mail.code} from ${mail.from} | ${mail.subject}`);
@@ -777,6 +786,57 @@ async function groupPlan(exit, ua) {
   return plan;
 }
 
+/**
+ * `--verify-only`: no account is created. Every key in keys.txt is re-tested
+ * through the panel's own relay — the model it was minted with is in
+ * accounts.json (`token_group`/`model`), so the token's group binding survives
+ * the re-check. 401/403 keys are reported to src/cli.js, which owns keys-dead.txt.
+ */
+async function verifyOnly(exits) {
+  const keys = fs.existsSync(KEYS)
+    ? fs.readFileSync(KEYS, 'utf8').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+    : [];
+  if (!keys.length) {
+    log(`no keys in ${KEYS}`);
+    process.exit(0);
+  }
+  const minted = new Map(accounts.filter((a) => a.key).map((a) => [a.key, a]));
+  let live = 0;
+  const dead = [];
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const rec = minted.get(key) || {};
+    const group = rec.token_group || '';
+    const model = rec.model || MODEL;
+    let status = 0;
+    let content = '';
+    try {
+      const chat = await req(exits[i % exits.length], `${BASE}/v1/chat/completions`, {
+        method: 'POST',
+        timeoutMs: 150000,
+        headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'user-agent': uaFor(i) },
+        body: { model, messages: [{ role: 'user', content: 'Reply OK' }], max_tokens: 64, stream: false },
+        retries: 1,
+      });
+      status = chat.status;
+      const msg = chat.json && chat.json.choices && chat.json.choices[0] && chat.json.choices[0].message;
+      content = msg ? String(msg.content || '').trim() : '';
+    } catch (e) {
+      dead.push({ key, status: 0, why: e.message });
+      log(`  ✘ ${key.slice(0, 8)}… ${String(e.message).slice(0, 90)}`);
+      continue;
+    }
+    const ok = status === 200 && content;
+    if (ok) live++;
+    else dead.push({ key, status, why: `chat=${status}${content ? '' : ' (empty answer)'}` });
+    log(`  ${ok ? '✔' : '✘'} ${key.slice(0, 8)}… ${group || '-'}/${model} chat=${status}${content ? ` ${JSON.stringify(content.slice(0, 20))}` : ''}`);
+  }
+  for (const d of dead) if (keyRejected(d.status)) recordDeadKey(d.key, d.why);
+  log(`verify: ${live}/${keys.length} keys live${dead.length ? ` — dead: ${dead.map((d) => `${d.key.slice(0, 8)}… (${d.why})`).join(', ')}` : ''}`);
+  console.log(`RESULT ${JSON.stringify({ provider: NAME, verify: true, live, total: keys.length, dead: dead.length })}`);
+  process.exit(live === keys.length ? 0 : 1);
+}
+
 // ---------------------------------------------------------------- driver
 
 (async () => {
@@ -797,6 +857,7 @@ async function groupPlan(exit, ua) {
   const warp = exits.find((e) => e && e.warp);
   if (warp) MAIL_EXITS.push(warp);
   loadAccounts();
+  if (VERIFY_ONLY) return verifyOnly(exits);
   const already = new Set(accounts.filter((a) => a.status === 'chat-200').map((a) => a.email));
   log(`mint start host=${HOST} tag=${TAG} count=${COUNT} conc=${CONC} model=${MODEL} exits=${exits.filter(Boolean).length || 'direct'}`);
   report(`- ${new Date().toISOString().slice(11, 16)} · ${NAME} · başladı: count=${COUNT} conc=${CONC} exits=${exits.length} model=${MODEL}`);

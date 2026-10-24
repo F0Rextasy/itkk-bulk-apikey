@@ -76,7 +76,7 @@ curl https://itkk.lol/v1/chat/completions \
 ## 🛠 빠른 시작
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
 모든 HTTP 호출은 `proxy-lab/out/*live*.txt`의 출구(또는 WARP `socks5://127.0.0.1:40000`)를 통해 나갑니다; 직접 요청은 구조적으로 거부됩니다.
@@ -130,7 +130,7 @@ inbox (one address per account)                                  a fresh address
 ## ⚙️ CLI 옵션
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | 플래그 | 기본값 | 의미 |
@@ -163,8 +163,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 [9Router](https://9router.com)는 자체 호스팅, OpenAI 호환 라우터입니다. 명령 하나로 `keys.txt`를 작동하는 콤보가 있는 제공자 노드로 바꿉니다:
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 그러면 모델은 `itkk/<model id>`로 제공되며, 모든 키에 걸쳐 로드 밸런싱됩니다.
@@ -174,8 +173,7 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 [OmniRoute](https://omniroute.online)는 자체 호스팅, OpenAI 호환 라우터입니다. 명령 하나로 `keys.txt`를 작동하는 콤보가 있는 제공자 노드로 바꿉니다:
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 그러면 모델은 `itkk/<model id>`로 제공되며, 모든 키에 걸쳐 로드 밸런싱됩니다.

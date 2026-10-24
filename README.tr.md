@@ -76,7 +76,7 @@ Model kimliği, token'ın bağlı olduğu gruba ait olmalıdır.
 ## 🛠 Hızlı başlangıç
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
 Her HTTP çağrısı `proxy-lab/out/*live*.txt` içinden bir çıkıştan (veya WARP `socks5://127.0.0.1:40000`) geçer; doğrudan bir istek tasarım gereği reddedilir.
@@ -130,7 +130,7 @@ inbox (one address per account)                                  a fresh address
 ## ⚙️ CLI seçenekleri
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | Bayrak | Varsayılan | Anlamı |
@@ -163,8 +163,7 @@ Laboratuvarın kendi kaynağı: `proxy-lab/out/exits-emergency-panel-live.txt`, 
 [9Router](https://9router.com) kendi kendine barındırılan, OpenAI uyumlu bir yönlendiricidir. Tek bir komut `keys.txt` dosyasını çalışan kombinasyonlara sahip bir sağlayıcı düğümüne dönüştürür:
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 Modeller daha sonra `itkk/<model id>` olarak sunulur ve her anahtar arasında yük dengelenir.
@@ -174,8 +173,7 @@ Modeller daha sonra `itkk/<model id>` olarak sunulur ve her anahtar arasında y�
 [OmniRoute](https://omniroute.online) kendi kendine barındırılan, OpenAI uyumlu bir yönlendiricidir. Tek bir komut `keys.txt` dosyasını çalışan kombinasyonlara sahip bir sağlayıcı düğümüne dönüştürür:
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 Modeller daha sonra `itkk/<model id>` olarak sunulur ve her anahtar arasında yük dengelenir.

@@ -76,7 +76,7 @@ curl https://itkk.lol/v1/chat/completions \
 ## 🛠 快速开始
 
 ```bash
-node providers/itkk.lol/mint.js --count 100 --conc 6 --model deepseek-v4.1-flash
+node src/cli.js --count 100 --conc 6 --model deepseek-v4.1-flash
 ```
 
 每个 HTTP 调用都通过 `proxy-lab/out/*live*.txt` 中的出口（或 WARP `socks5://127.0.0.1:40000`）发出；直接请求在构造上就会被拒绝。
@@ -129,7 +129,7 @@ inbox (one address per account)                                  a fresh address
 ## ⚙️ CLI 选项
 
 ```bash
-node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <sec>]
+node src/cli.js --count N [--conc N] [--model <id>] [--budget <sec>]
 ```
 
 | 标志 | 默认值 | 含义 |
@@ -162,8 +162,7 @@ node providers/itkk.lol/mint.js --count N [--conc N] [--model <id>] [--budget <s
 [9Router](https://9router.com) 是一个自托管、兼容 OpenAI 的路由器。一条命令即可将 `keys.txt` 转换为带有可用组合的提供商节点：
 
 ```bash
-node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 随后模型将以 `itkk/<model id>` 形式提供，并在所有密钥之间负载均衡。
@@ -173,8 +172,7 @@ node proxy-lab/9router-bulk-keys.js --name "ITKK" --prefix itkk \
 [OmniRoute](https://omniroute.online) 是一个自托管、兼容 OpenAI 的路由器。一条命令即可将 `keys.txt` 转换为带有可用组合的提供商节点：
 
 ```bash
-node proxy-lab/omniroute-bulk-keys.js --name "ITKK" --prefix itkk \
-  --base-url https://itkk.lol/v1 --keys providers/itkk.lol/keys.txt
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
 随后模型将以 `itkk/<model id>` 形式提供，并在所有密钥之间负载均衡。
